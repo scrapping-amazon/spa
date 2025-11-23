@@ -23,7 +23,8 @@ import {
   Calculator,
   Target,
   BarChart3,
-  Zap
+  Zap,
+  Weight
 } from "lucide-react"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
@@ -95,17 +96,17 @@ export function ProductDetail({ product, priceHistory }: ProductDetailProps) {
 
   // Calculate price analytics
   const sortedHistory = priceHistory.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-  const previousPrice = sortedHistory.length > 1 ? sortedHistory[sortedHistory.length - 2]?.price : product.currentPrice
-  const priceChange = getPriceChangeIndicator(product.currentPrice, previousPrice)
+  const previousPrice = sortedHistory.length > 1 ? sortedHistory[sortedHistory.length - 2]?.price : product.lastPriceAmazon
+  const priceChange = getPriceChangeIndicator(product.lastPriceAmazon, previousPrice)
   
-  const lowestPrice = Math.min(...sortedHistory.map(h => h.price), product.currentPrice)
-  const highestPrice = Math.max(...sortedHistory.map(h => h.price), product.currentPrice)
+  const lowestPrice = Math.min(...sortedHistory.map(h => h.price), product.lastPriceAmazon)
+  const highestPrice = Math.max(...sortedHistory.map(h => h.price), product.lastPriceAmazon)
   const averagePrice = sortedHistory.length > 0 
     ? sortedHistory.reduce((sum, h) => sum + h.price, 0) / sortedHistory.length 
-    : product.currentPrice
+    : product.lastPriceAmazon
 
   // Calculate profit metrics if sell price is provided
-  const profitAnalysis = sellPrice ? calculateProfit(product.currentPrice, parseFloat(sellPrice)) : null
+  const profitAnalysis = sellPrice ? calculateProfit(product.lastPriceAmazon, parseFloat(sellPrice)) : null
 
   // Chart configuration
   const chartConfig = {
@@ -175,22 +176,42 @@ export function ProductDetail({ product, priceHistory }: ProductDetailProps) {
               <div className="flex-1 min-w-0">
                 <h1 className="text-2xl font-bold text-foreground mb-3 line-clamp-2">{product.name}</h1>
                 
-                {/* Price and Status */}
-                <div className="flex items-center gap-4 mb-4">
+                {/* Price and Logo Info */}
+                <div className="flex flex-col gap-2 mb-4">
+                  {/* Amazon Price */}
                   <div className="flex items-center gap-2">
-                    <span className="text-3xl font-bold text-foreground">
-                      {formatPrice(product.currentPrice)}
+                    <Image src="/amazon-logo.svg" alt="Amazon Logo" width={20} height={20} />
+                    <span className="text-lg font-semibold text-foreground">
+                      {product.lastPriceAmazon ? formatPrice(product.lastPriceAmazon) : 'Unavailable'}
                     </span>
                     {priceChange.icon && (
                       <priceChange.icon className={`h-5 w-5 ${priceChange.color}`} />
                     )}
-                  </div>
-                  
-                  {product.isOnOffer && product.discountPercentage && (
+                    {product.isOnOffer && product.discountPercentage && (
                     <Badge variant="secondary" className="bg-red-100 text-red-700 hover:bg-red-200">
                       {product.discountPercentage}% OFF
                     </Badge>
                   )}
+                  </div>
+
+                  {/* Mercado Libre Price */}
+                  <div className="flex items-center gap-2">
+                    <Image src="/mercadolibre-logo.svg" alt="Mercado Libre Logo" width={20} height={20} />
+                    <span className="text-lg font-semibold text-foreground">
+                      {product.lastPriceMercadoLibre ? formatPrice(product.lastPriceMercadoLibre) : 'Unavailable'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Price and Status */}
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="flex items-center gap-2">
+                    <span className="text-3xl font-bold text-foreground">
+                      {formatPrice(product.profit)}
+                    </span>
+                  </div>
+                  
+                  
                 </div>
 
                 {/* Stock and Tracking Status */}
@@ -214,11 +235,22 @@ export function ProductDetail({ product, priceHistory }: ProductDetailProps) {
                       </span>
                     </div>
                   )}
+
+                  {product.weightInGrams && (
+                    <div className="flex items-center gap-1">
+                      <Weight className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">
+                        Weight: {product.weightInGrams} Grams
+                      </span>
+                    </div>
+                  )}
                 </div>
+
+                
 
                 {/* Action Buttons */}
                 <div className="flex gap-2">
-                  <Button onClick={() => window.open(product.url, "_blank")}>
+                  <Button onClick={() => window.open(product.amazonUrl, "_blank")}>
                     <ExternalLink className="h-4 w-4 mr-2" />
                     View on Amazon
                   </Button>
@@ -348,7 +380,7 @@ export function ProductDetail({ product, priceHistory }: ProductDetailProps) {
                 
                 <div className="space-y-2">
                   <Label className="text-sm">Amazon Price (Buy Price)</Label>
-                  <div className="text-2xl font-bold">{formatPrice(product.currentPrice)}</div>
+                  <div className="text-2xl font-bold">{formatPrice(product.lastPriceAmazon)}</div>
                 </div>
               </CardContent>
             </Card>
@@ -472,7 +504,7 @@ export function ProductDetail({ product, priceHistory }: ProductDetailProps) {
               <div className="pt-4">
                 <h4 className="font-medium mb-2">Business Recommendations</h4>
                 <div className="space-y-2 text-sm text-muted-foreground">
-                  <p>• Current price is {((product.currentPrice - lowestPrice) / lowestPrice * 100).toFixed(1)}% above lowest recorded</p>
+                  <p>• Current price is {((product.lastPriceAmazon - lowestPrice) / lowestPrice * 100).toFixed(1)}% above lowest recorded</p>
                   <p>• Price volatility: {((highestPrice - lowestPrice) / averagePrice * 100).toFixed(1)}%</p>
                   {product.isOnOffer && <p className="text-green-600">• ✓ Product is currently on sale - good time to buy!</p>}
                   {!product.inStock && <p className="text-red-600">• ⚠ Out of stock - monitor for restocking</p>}

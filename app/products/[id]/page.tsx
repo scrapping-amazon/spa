@@ -5,15 +5,14 @@ import { ProductDetail } from "@/components/product-detail"
 import { Loader2, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
+import { useParams } from "next/navigation";
+import { Product } from "@/lib/api";
 
-interface ProductPageProps {
-  params: {
-    id: string
-  }
-}
+export default function ProductPage() {
+  const params = useParams();
+  const id = params?.id;
 
-export default function ProductPage({ params }: ProductPageProps) {
-  const { product, priceHistory, isLoading, isError } = useProduct(params.id)
+  const { product, priceHistory, isLoading, isError } = useProduct(id as string);
 
   if (isLoading) {
     return (
@@ -31,7 +30,9 @@ export default function ProductPage({ params }: ProductPageProps) {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-xl font-semibold mb-2">Product not found</h2>
-          <p className="text-muted-foreground mb-4">The product you're looking for doesn't exist.</p>
+          <p className="text-muted-foreground mb-4">
+            The product you're looking for doesn't exist.
+          </p>
           <Button asChild>
             <Link href="/">
               <ArrowLeft className="h-4 w-4 mr-2" />
@@ -54,9 +55,9 @@ export default function ProductPage({ params }: ProductPageProps) {
             </Link>
           </Button>
         </div>
-        
-        <ProductDetail 
-          product={product} 
+
+        <ProductDetail
+          product={product as Product}
           priceHistory={priceHistory}
         />
       </div>

@@ -5,7 +5,8 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"
 export interface Product {
   _id: string
   name: string
-  url: string
+  amazonUrl: string
+  mercadoLibreUrl: string
   imageUrl: string
   isActive: boolean
   lastScrappedAt: string
@@ -15,10 +16,17 @@ export interface Product {
   isOnOffer: boolean
   discountPercentage: number
   originalPrice: number
+  lastPriceAmazon: number
+  lastPriceMercadoLibre: number
+  url: string
+  profit: number
+  weightInGrams: number
   createdAt: string
   updatedAt: string
   __v: number
 }
+
+
 
 export interface ProductWithHistory {
   product: Product
@@ -27,7 +35,8 @@ export interface ProductWithHistory {
 
 export interface CreateProductRequest {
   name: string
-  url: string
+  amazonUrl: string
+  mercadoLibreUrl: string
   isActive?: boolean
 }
 

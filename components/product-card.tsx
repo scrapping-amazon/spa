@@ -103,14 +103,17 @@ export function ProductCard({ product, onDelete, onToggleActive }: ProductCardPr
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => window.open(product.url, "_blank")}>
+                  <DropdownMenuItem onClick={() => window.open(product.amazonUrl, "_blank")}>
                     View on Amazon
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => onToggleActive?.(product._id)}>
                     {product.isActive ? "Pause Tracking" : "Resume Tracking"}
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    onClick={() => onDelete?.(product._id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDelete?.(product._id);
+                    }}
                     className="text-destructive focus:text-destructive focus:bg-destructive/10 hover:bg-destructive/10"
                   >
                     Delete
@@ -119,17 +122,38 @@ export function ProductCard({ product, onDelete, onToggleActive }: ProductCardPr
               </DropdownMenu>
             </div>
 
-            {/* Price and Discount Info */}
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-lg font-semibold text-foreground">
-                {product.currentPrice ? formatPrice(product.currentPrice) : 'Price unavailable'}
-              </span>
-              {product.isOnOffer && product.discountPercentage && (
-                <Badge variant="secondary" className="text-xs font-medium bg-red-100 text-red-700 hover:bg-red-200">
-                  <Percent className="h-3 w-3 mr-1" />
-                  {product.discountPercentage}% OFF
-                </Badge>
-              )}
+            {/* Price and Discount Info for Amazon and Mercado Libre */}
+            <div className="flex flex-col gap-2 mb-2">
+              <div className="flex items-center gap-2">
+                <span className="text-lg font-bold text-foreground">
+                  Profit:
+                </span>
+                <span className="text-lg font-semibold text-foreground">
+                  {product.profit ? formatPrice(product.profit) : 'Unavailable'}
+                </span>
+              </div>
+              {/* Amazon Price */}
+              <div className="flex items-center gap-2">
+                <Image src="/amazon-logo.svg" alt="Amazon Logo" width={20} height={20} />
+                <span className="text-lg font-semibold text-foreground">
+                  {product.lastPriceAmazon ? formatPrice(product.lastPriceAmazon) : 'Unavailable'}
+                </span>
+                {product.isOnOffer && product.discountPercentage && (
+                  <Badge variant="secondary" className="text-xs font-medium bg-red-100 text-red-700 hover:bg-red-200">
+                    <Percent className="h-3 w-3 mr-1" />
+                    {product.discountPercentage}% OFF
+                  </Badge>
+                )}
+              </div>
+
+              {/* Mercado Libre Price */}
+              <div className="flex items-center gap-2">
+                <Image src="/mercadolibre-logo.svg" alt="Mercado Libre Logo" width={20} height={20} />
+                <span className="text-lg font-semibold text-foreground">
+                  {product.lastPriceMercadoLibre ? formatPrice(product.lastPriceMercadoLibre) : 'Unavailable'}
+                </span>
+              </div>
+              
             </div>
 
             {/* Stock and Quantity Info */}
