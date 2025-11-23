@@ -16,12 +16,14 @@ import { useToast } from "@/hooks/use-toast"
 interface FormData {
   name: string
   url: string
+  mercadoLibreUrl: string
   isActive: boolean
 }
 
 interface FormErrors {
   name?: string
   url?: string
+  mercadoLibreUrl?: string
   general?: string
 }
 
@@ -30,6 +32,7 @@ export function AddLinkForm() {
   const [formData, setFormData] = useState<FormData>({
     name: "",
     url: "",
+    mercadoLibreUrl: "",
     isActive: true,
   })
   const [errors, setErrors] = useState<FormErrors>({})
@@ -60,6 +63,20 @@ export function AddLinkForm() {
       }
     }
 
+    // Validate Mercado Libre URL
+    if (!formData.mercadoLibreUrl.trim()) {
+      newErrors.mercadoLibreUrl = "Mercado Libre URL is required"
+    } else {
+      try {
+        const mlUrl = new URL(formData.mercadoLibreUrl)
+        if (!mlUrl.hostname.includes("mercadolibre")) {
+          newErrors.mercadoLibreUrl = "Please enter a valid Mercado Libre product URL"
+        }
+      } catch {
+        newErrors.mercadoLibreUrl = "Please enter a valid URL"
+      }
+    }
+
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -77,13 +94,14 @@ export function AddLinkForm() {
     try {
       await apiService.createProduct({
         name: formData.name.trim(),
-        url: formData.url.trim(),
+        amazonUrl: formData.url.trim(),
+        mercadoLibreUrl: formData.mercadoLibreUrl.trim(),
         isActive: formData.isActive,
       })
 
       setSubmitStatus("success")
       // Reset form on success
-      setFormData({ name: "", url: "", isActive: true })
+      setFormData({ name: "", url: "", mercadoLibreUrl: "", isActive: true })
       setErrors({})
 
       toast({
@@ -184,6 +202,30 @@ export function AddLinkForm() {
                 <p className="text-xs text-muted-foreground">Copy the product URL from Amazon and paste it here</p>
               </div>
 
+              {/* Mercado Libre URL */}
+              <div className="space-y-2">
+                <Label htmlFor="mercadoLibreUrl" className="text-sm font-medium">
+                  Mercado Libre Product URL *
+                </Label>
+                <Input
+                  id="mercadoLibreUrl"
+                  type="url"
+                  placeholder="https://mercadolibre.com/dp/..."
+                  value={formData.mercadoLibreUrl}
+                  onChange={(e) => handleInputChange("mercadoLibreUrl", e.target.value)}
+                  disabled={isSubmitting}
+                />
+                {errors.mercadoLibreUrl && (
+                  <p className="text-sm text-destructive flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    {errors.mercadoLibreUrl}
+                  </p>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  If you want to track the same product on Mercado Libre, enter its URL here.
+                </p>
+              </div>
+
               {/* Active Toggle */}
               <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
                 <div className="space-y-1">
@@ -237,7 +279,7 @@ export function AddLinkForm() {
                   type="button"
                   variant="outline"
                   onClick={() => {
-                    setFormData({ name: "", url: "", isActive: true })
+                    setFormData({ name: "", url: "", mercadoLibreUrl: "", isActive: true })
                     setErrors({})
                     setSubmitStatus("idle")
                   }}
